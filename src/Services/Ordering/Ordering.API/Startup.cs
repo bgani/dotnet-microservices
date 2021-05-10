@@ -12,6 +12,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Ordering.Application;
 using Ordering.Infrastructure;
+using MassTransit;
+using EventBus.Messages.Common;
+using Ordering.API.EventBusConsumer;
 
 namespace Ordering.API
 {
@@ -30,11 +33,30 @@ namespace Ordering.API
             services.AddApplicationServices();
             services.AddInfrastructureServices(Configuration);
 
+            // mass transit - rabbitmq config
+            services.AddMassTransit(config => {
+
+                config.AddConsumer<BasketCheckoutConsumer>();
+
+                config.UsingRabbitMq((ctx, cfg) => {
+                    cfg.Host(Configuration["EventBusSettings:HostAddress"]);
+
+                    cfg.ReceiveEndpoint(EventBusConstants.BasketCheckoutQueue, c =>
+                    {
+                        c.ConfigureConsumer<BasketCheckoutConsumer>(ctx);
+                    });
+                });
+            });
+            // mass transit as hosted service
+            services.AddMassTransitHostedService();
+
+
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Ordering.API", Version = "v1" });
             });
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
