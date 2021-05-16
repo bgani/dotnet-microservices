@@ -1,4 +1,5 @@
-﻿using AspnetRunBasics.Models;
+﻿using AspnetRunBasics.Extensions;
+using AspnetRunBasics.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,9 +17,10 @@ namespace AspnetRunBasics.Services
             _client = client ?? throw new ArgumentNullException(nameof(client));
         }
 
-        public Task<IEnumerable<OrderResponseModel>> GetOrdersByUserName(string userName)
+        public async Task<IEnumerable<OrderResponseModel>> GetOrdersByUserName(string userName)
         {
-            throw new NotImplementedException();
+            var response = await _client.GetAsync($"/Order/{userName}");
+            return await response.ReadContentAs<List<OrderResponseModel>>();
         }
     }
 }
